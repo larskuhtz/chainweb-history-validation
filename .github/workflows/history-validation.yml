@@ -1,8 +1,8 @@
-name: Mainnet History Validation
+name: Chainweb History Validation
 
 on:
   repository_dispatch:
-    types: [request-mainnet-history-validation]
+    types: [request-history-validation]
   workflow_dispatch:
     inputs:
       os:
@@ -87,12 +87,19 @@ jobs:
     needs: [config]
     runs-on: ${{ needs.config.outputs.os }}
     steps:
-    - name: Install non-Haskell dependencies (ubuntu)
-      if: contains(needs.config.outputs.os, 'ubuntu')
-      run: sudo apt-get install -y expect
-    - name: Install non-Haskell dependencies (macOS)
-      if: contains(needs.config.outputs.os, 'mac')
-      run: brew install expect
+    - name: Install non-Haskell dependencies
+      run: |
+        case "${{ needs.config.outputs.os }}" in
+        ubuntu*)
+          sudo apt-get install -y expect
+          ;;
+        mac*)
+          brew install expect
+          ;;
+        *)
+          echo "::error::unsupported operating system ${{ needs.config.output.os }}"
+          exit 1
+          ;;
     - name: install chainweb-node
       uses: larskuhtz/install-chainweb-action@master
       with:
@@ -159,12 +166,19 @@ jobs:
     needs: [config]
     runs-on: ${{ needs.config.outputs.os }}
     steps:
-    - name: Install non-Haskell dependencies (ubuntu)
-      if: contains(needs.config.outputs.os, 'ubuntu')
-      run: sudo apt-get install -y expect
-    - name: Install non-Haskell dependencies (macOS)
-      if: contains(needs.config.outputs.os, 'mac')
-      run: brew install expect
+    - name: Install non-Haskell dependencies
+      run: |
+        case "${{ needs.config.outputs.os }}" in
+        ubuntu*)
+          sudo apt-get install -y expect
+          ;;
+        mac*)
+          brew install expect
+          ;;
+        *)
+          echo "::error::unsupported operating system ${{ needs.config.output.os }}"
+          exit 1
+          ;;
     - name: install chainweb-node
       uses: larskuhtz/install-chainweb-action@master
       with:
