@@ -1,0 +1,67 @@
+name: Validate Headers
+description: Validate headers in a chainweb database
+inputs:
+  chainweb_version: 
+    description: Chainweb version of the database
+    default: 'mainnet01'
+  timeout:
+    description: Timeout for validation in minutes
+    default: 60
+
+runs:
+  using: "composite"
+  steps:
+    - name: Sync chain database from S3
+      shell: bash
+      run: aws s3 sync "$DB_SNAPSHOT_URI" db/0/rocksDb --delete --exclude=LOCK
+      env:
+        DB_SNAPSHOT_URI: 's3://chainweb-chain-db/${{ inputs.chainweb_version }}/rocksdb/'
+    - name: Write chainweb-node configuration file
+      shell: bash
+      run: |
+        cat >> config.yaml <<EOF
+          databaseDirectory: "db"
+          chainweb:
+            chainwebVersion: ${{ inputs.chainweb_version }}
+            validateHashesOnReplay: false
+            p2p:
+              peer:
+                hostaddress:
+                  hostname: localhost
+                  port: 4445
+              private: true
+              ignoreBootstrapNodes: true
+            transactionIndex:
+              enabled: false
+            headerStream: false
+            mempoolP2p:
+              enabled: false
+            cuts:
+              pruneChainDatabase: headers-checked
+          logging:
+            telemetryBackend:
+              enabled: false
+            backend:
+              handle: stdout
+              color: "true"
+            logger:
+              log_level: info
+              policy: block
+            filter:
+              rules:
+              - key: component
+                value: init
+                level: info
+              - key: component
+                value: database-pruning
+                level: info
+              default: warn
+        EOF
+    - name: Validate block headers and check Merkle tree
+      shell: bash
+      timeout-minutes: 60
+      run: |
+        unbuffer chainweb-node --config-file config.yaml |
+        { sed -u -e '/finished pruning databases/q0;/\[Error\]/q1;$q2'; x=$? ; killall -9 chainweb-node; } ||
+        true
+        exit $x

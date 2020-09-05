@@ -110,55 +110,11 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
     - name: Check chainweb-node installation
       run: chainweb-node --version
-    - name: Sync chain database from S3
-      run: aws s3 sync "$DB_SNAPSHOT_URI" db/0/rocksDb --delete --exclude=LOCK
-    - name: Write chainweb-node configuration file
-      run: |
-        cat >> config.yaml <<EOF
-          databaseDirectory: "db"
-          chainweb:
-            chainwebVersion: ${{ needs.config.outputs.chainweb_version }}
-            validateHashesOnReplay: false
-            p2p:
-              peer:
-                hostaddress:
-                  hostname: localhost
-                  port: 4445
-              private: true
-              ignoreBootstrapNodes: true
-            transactionIndex:
-              enabled: false
-            headerStream: false
-            mempoolP2p:
-              enabled: false
-            cuts:
-              pruneChainDatabase: headers-checked
-          logging:
-            telemetryBackend:
-              enabled: false
-            backend:
-              handle: stdout
-              color: "true"
-            logger:
-              log_level: info
-              policy: block
-            filter:
-              rules:
-              - key: component
-                value: init
-                level: info
-              - key: component
-                value: database-pruning
-                level: info
-              default: warn
-        EOF
-    - name: Validate block headers and check Merkle tree
-      timeout-minutes: 60
-      run: |
-        unbuffer chainweb-node --config-file config.yaml |
-        { sed -u -e '/finished pruning databases/q0;/\[Error\]/q1;$q2'; x=$? ; killall -9 chainweb-node; } ||
-        true
-        exit $x
+    - name: Validate Headers
+      uses: .github/actions/validate-headers
+      with:
+        chainweb_version: ${{ needs.config.outputs.chainweb_version }}
+        timeout: 60
 
   # ########################################################################## #
   # Validate Pact History
