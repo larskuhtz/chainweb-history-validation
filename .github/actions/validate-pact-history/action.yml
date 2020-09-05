@@ -1,5 +1,5 @@
-name: Validate Headers
-description: Validate headers in a chainweb database
+name: Validate Pact History
+description: Validate pact history of a chainweb database
 inputs:
   chainweb_version:
     description: Chainweb version of the database
@@ -19,7 +19,7 @@ runs:
         databaseDirectory: "db"
         chainweb:
           chainwebVersion: ${{ inputs.chainweb_version }}
-          validateHashesOnReplay: false
+          validateHashesOnReplay: true
           p2p:
             peer:
               hostaddress:
@@ -33,13 +33,13 @@ runs:
           mempoolP2p:
             enabled: false
           cuts:
-            pruneChainDatabase: headers-checked
+            pruneChainDatabase: false
         logging:
           telemetryBackend:
             enabled: false
           backend:
             handle: stdout
-            color: "true"
+            color: "True"
           logger:
             log_level: info
             policy: block
@@ -48,15 +48,12 @@ runs:
             - key: component
               value: init
               level: info
-            - key: component
-              value: database-pruning
-              level: info
             default: warn
       EOF
-  - name: Validate block headers and check Merkle tree
+  - name: Validate pact history
     shell: bash
     run: |
       unbuffer chainweb-node --config-file config.yaml |
-      { sed -u -e '/finished pruning databases/q0;/\[Error\]/q1;$q2'; x=$? ; killall -9 chainweb-node; } ||
+      { sed -u -e '/finished synchronizing Pact DBs/q0;/\[Error\]/q1;$q2'; x=$?; killall -9 chainweb-node; } ||
       true
-      exit $x
+      exit $x;

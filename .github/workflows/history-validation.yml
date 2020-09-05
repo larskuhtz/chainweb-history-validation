@@ -115,7 +115,6 @@ jobs:
       uses: ./.github/actions/validate-headers
       with:
         chainweb_version: ${{ needs.config.outputs.chainweb_version }}
-        timeout: 60
 
   # ########################################################################## #
   # Validate Pact History
@@ -149,49 +148,7 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
     - name: Check chainweb-node installation
       run: chainweb-node --version
-    - name: Sync chain database from S3
-      run: aws s3 sync "$DB_SNAPSHOT_URI" db/0/rocksDb --delete --exclude=LOCK
-    - name: Write chainweb-node configuration file
-      run: |
-        cat >> config.yaml <<EOF
-          databaseDirectory: "db"
-          chainweb:
-            chainwebVersion: ${{ needs.config.outputs.chainweb_version }}
-            validateHashesOnReplay: true
-            p2p:
-              peer:
-                hostaddress:
-                  hostname: localhost
-                  port: 4445
-              private: true
-              ignoreBootstrapNodes: true
-            transactionIndex:
-              enabled: false
-            headerStream: false
-            mempoolP2p:
-              enabled: false
-            cuts:
-              pruneChainDatabase: false
-          logging:
-            telemetryBackend:
-              enabled: false
-            backend:
-              handle: stdout
-              color: "True"
-            logger:
-              log_level: info
-              policy: block
-            filter:
-              rules:
-              - key: component
-                value: init
-                level: info
-              default: warn
-        EOF
-    - name: Validate pact history
-      timeout-minutes: 120
-      run: |
-        unbuffer chainweb-node --config-file config.yaml |
-        { sed -u -e '/finished synchronizing Pact DBs/q0;/\[Error\]/q1;$q2'; x=$?; killall -9 chainweb-node; } ||
-        true
-        exit $x;
+    - name: Validate Pact History
+      uses: ./.github/actions/validate-pact-history
+      with:
+        chainweb_version: ${{ needs.config.outputs.chainweb_version }}
