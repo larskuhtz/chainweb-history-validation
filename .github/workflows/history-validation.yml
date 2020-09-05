@@ -112,7 +112,7 @@ jobs:
     - name: Check chainweb-node installation
       run: chainweb-node --version
     - name: Validate Headers
-      uses: ./.github/actions/validate-headers@master
+      uses: ./.github/actions/validate-headers
       with:
         chainweb_version: ${{ needs.config.outputs.chainweb_version }}
         timeout: 60
