@@ -126,6 +126,7 @@ jobs:
     env:
       DB_SNAPSHOT_URI: 's3://chainweb-chain-db/${{ needs.config.outputs.chainweb_version }}/rocksdb/'
     steps:
+    - uses: actions/checkout@v2
     - name: Install non-Haskell dependencies
       run: |
         case "${{ needs.config.outputs.os }}" in
