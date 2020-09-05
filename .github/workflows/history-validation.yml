@@ -19,12 +19,11 @@ on:
         default: 'mainnet01'
 
 env:
-  S3_ARTIFACT_BUCKET: kadena-cabal-cache
-  S3_ARTIFACT_FOLDER: chainweb-node
-  DB_SNAPSHOT_URI: 's3://chainweb-chain-db/${{ github.event.inputs.chainweb_version }}/rocksdb/'
   AWS_ACCESS_KEY_ID: ${{ secrets.kadena_cabal_cache_aws_access_key_id }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.kadena_cabal_cache_aws_secret_access_key }}
   AWS_DEFAULT_REGION: us-east-1
+  S3_ARTIFACT_BUCKET: kadena-cabal-cache
+  S3_ARTIFACT_FOLDER: chainweb-node
 
 jobs:
 
@@ -86,6 +85,8 @@ jobs:
     name: Validate headers
     needs: [config]
     runs-on: ${{ needs.config.outputs.os }}
+    env:
+      DB_SNAPSHOT_URI: 's3://chainweb-chain-db/${{ needs.config.outputs.chainweb_version }}/rocksdb/'
     steps:
     - name: Install non-Haskell dependencies
       run: |
@@ -166,6 +167,8 @@ jobs:
     name: Validate pact history
     needs: [config]
     runs-on: ${{ needs.config.outputs.os }}
+    env:
+      DB_SNAPSHOT_URI: 's3://chainweb-chain-db/${{ needs.config.outputs.chainweb_version }}/rocksdb/'
     steps:
     - name: Install non-Haskell dependencies
       run: |
