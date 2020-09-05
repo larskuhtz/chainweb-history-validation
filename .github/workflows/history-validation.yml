@@ -100,6 +100,7 @@ jobs:
           echo "::error::unsupported operating system ${{ needs.config.output.os }}"
           exit 1
           ;;
+        esac
     - name: install chainweb-node
       uses: larskuhtz/install-chainweb-action@master
       with:
