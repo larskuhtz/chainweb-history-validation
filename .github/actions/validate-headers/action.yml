@@ -5,7 +5,7 @@ inputs:
     description: Chainweb version of the database
     default: 'mainnet01'
   timeout:
-    description: Timeout for validation in minutes
+    description: Timeout for validation in minutes (currently unsuppored)
     default: 60
 
 runs:
@@ -59,7 +59,6 @@ runs:
         EOF
     - name: Validate block headers and check Merkle tree
       shell: bash
-      timeout-minutes: 60
       run: |
         unbuffer chainweb-node --config-file config.yaml |
         { sed -u -e '/finished pruning databases/q0;/\[Error\]/q1;$q2'; x=$? ; killall -9 chainweb-node; } ||
