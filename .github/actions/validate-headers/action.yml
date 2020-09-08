@@ -8,6 +8,7 @@ runs:
   using: "composite"
   steps:
   - name: Install expect package for unbuffer program
+    shell: bash
     run: |
       case "${{ runner.os }}" in
       Linux)
