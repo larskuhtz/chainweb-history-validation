@@ -1,1 +1,2 @@
-Repository to test workflows for chainweb-node
+A collection of actions and workflows used for testing
+[chainweb-node](https://github.com/kadena-io/chainweb-node).

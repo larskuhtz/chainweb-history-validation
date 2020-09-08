@@ -89,20 +89,6 @@ jobs:
       DB_SNAPSHOT_URI: 's3://chainweb-chain-db/${{ needs.config.outputs.chainweb_version }}/rocksdb/'
     steps:
     - uses: actions/checkout@v2
-    - name: Install non-Haskell dependencies
-      run: |
-        case "${{ needs.config.outputs.os }}" in
-        ubuntu*)
-          sudo apt-get install -y expect
-          ;;
-        mac*)
-          brew install expect
-          ;;
-        *)
-          echo "::error::unsupported operating system ${{ needs.config.output.os }}"
-          exit 1
-          ;;
-        esac
     - name: install chainweb-node
       uses: larskuhtz/install-chainweb-action@master
       with:
@@ -127,20 +113,6 @@ jobs:
       DB_SNAPSHOT_URI: 's3://chainweb-chain-db/${{ needs.config.outputs.chainweb_version }}/rocksdb/'
     steps:
     - uses: actions/checkout@v2
-    - name: Install non-Haskell dependencies
-      run: |
-        case "${{ needs.config.outputs.os }}" in
-        ubuntu*)
-          sudo apt-get install -y expect
-          ;;
-        mac*)
-          brew install expect
-          ;;
-        *)
-          echo "::error::unsupported operating system ${{ needs.config.output.os }}"
-          exit 1
-          ;;
-        esac
     - name: install chainweb-node
       uses: larskuhtz/install-chainweb-action@master
       with:

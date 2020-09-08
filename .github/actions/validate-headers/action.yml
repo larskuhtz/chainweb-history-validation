@@ -7,6 +7,20 @@ inputs:
 runs:
   using: "composite"
   steps:
+  - name: Install expect package for unbuffer program
+    run: |
+      case "${{ runner.os }}" in
+      Linux)
+        sudo apt-get install -y expect
+        ;;
+      macOS)
+        brew install expect
+        ;;
+      *)
+        echo "::error::unsupported operating system ${{ runner.os }}"
+        exit 1
+        ;;
+      esac
   - name: Sync chain database from S3
     shell: bash
     run: aws s3 sync "$DB_SNAPSHOT_URI" db/0/rocksDb --delete --exclude=LOCK
