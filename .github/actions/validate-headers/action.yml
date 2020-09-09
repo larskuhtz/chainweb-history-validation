@@ -16,6 +16,8 @@ runs:
         ;;
       macOS)
         brew install expect
+        brew install gnu-sed
+        echo "::add-path::/usr/local/opt/gnu-sed/libexec/gnubin"
         ;;
       *)
         echo "::error::unsupported operating system ${{ runner.os }}"
