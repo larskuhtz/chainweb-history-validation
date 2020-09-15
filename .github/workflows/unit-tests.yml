@@ -1,0 +1,92 @@
+name: Chainweb Unit Test
+
+on:
+  repository_dispatch:
+    types: [request-unit-tests]
+  workflow_dispatch:
+    inputs:
+      os:
+        description: Operating system that the jobs run on
+        default: 'ubuntu-latest'
+      version:
+        description: chainweb-node version or revision that is used
+        default: 'master'
+      ghc_version:
+        descritpion: GHC of the build that is used
+        default: '8.10.2'
+
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.kadena_cabal_cache_aws_access_key_id }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.kadena_cabal_cache_aws_secret_access_key }}
+  AWS_DEFAULT_REGION: us-east-1
+  S3_ARTIFACT_BUCKET: kadena-cabal-cache
+  S3_ARTIFACT_FOLDER: chainweb-node
+
+jobs:
+
+  # ########################################################################## #
+  # Configure Workflow
+
+  config:
+    name: Configure Workflow
+    runs-on: ubuntu-latest
+    outputs:
+      os: ${{ steps.settings.outputs.os }}
+      ghc_version: ${{ steps.settings.outputs.ghc_version }}
+      version: ${{ steps.settings.outputs.version }}
+    steps:
+    - name: Get input values
+      id: settings
+      run: |
+        if [[ ${{ github.event_name }} = "workflow_dispatch" ]] ; then 
+          echo "::set-output name=os::${{ github.event.inputs.os }}"
+          echo "::set-output name=ghc_version::${{ github.event.inputs.ghc_version }}"
+          echo "::set-output name=version::${{ github.event.inputs.version }}"
+        elif [[ ${{ github.event_name }} = "repository_dispatch" ]] ; then
+
+          if [[ -n "${{ github.event.client_payload.os }}" ]] ; then
+            echo "::set-output name=os::${{ github.event.client_payload.os }}"
+          else
+            echo "::set-output name=os::ubuntu-latest"
+          fi
+
+          if [[ -n "${{ github.event.client_payload.ghc_version }}" ]] ; then
+            echo "::set-output name=ghc_version::${{ github.event.client_payload.ghc_version }}"
+          else
+            echo "::set-output name=ghc_version::8.10.2"
+          fi
+
+          if [[ -n "${{ github.event.client_payload.version }}" ]] ; then
+            echo "::set-output name=version::${{ github.event.client_payload.version }}"
+          else
+            echo "::set-output name=version::master"
+          fi
+
+        else
+          echo "::error::unsupported event ${{ github.event_name }}"
+          exit 1
+        fi
+
+  # ########################################################################## #
+  # Run Unit Tests
+
+  unit-tests:
+    name: Unit Tests
+    needs: [config]
+    runs-on: ${{ needs.config.outputs.os }}
+    steps:
+    - uses: actions/checkout@v2
+    - name: install chainweb-node
+      uses: larskuhtz/install-chainweb-action@master
+      with:
+        ghc_version: ${{ needs.config.outputs.ghc_version }}
+        version: ${{ needs.config.outputs.version }}
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Check chainweb-node installation
+      run: chainweb-node --version
+    - name: run tests
+      run: |
+          ulimit -n 10000
+          chainweb-tests --hide-successes --results-json test-results.json
+
+    # TODO upoad results
