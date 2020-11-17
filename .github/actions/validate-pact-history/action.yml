@@ -16,7 +16,7 @@ runs:
         ;;
       macOS)
         brew install expect gnu-sed
-        echo "::add-path::/usr/local/opt/gnu-sed/libexec/gnubin"
+        echo "/usr/local/opt/gnu-sed/libexec/gnubin" >> $GITHUB_PATH
         ;;
       *)
         echo "::error::unsupported operating system ${{ runner.os }}"
